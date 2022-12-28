@@ -5,9 +5,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import me.r3dactual.treerespawner.utils.ConfigManager;
 import org.bukkit.*;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -30,31 +28,17 @@ import java.util.Map;
 //  tree is cut down remove the leaves
 
 public final class Main extends JavaPlugin implements Listener {
-    // Create a new ConfigManager instance
-    ConfigManager configManager;
-
-    // Get the FileConfiguration object for the configuration file
-    FileConfiguration config;
-
     int checkRgInterval;
     int checkInterval;
     int growDelay;
 
     @Override
     public void onEnable() {
-        // Create a new ConfigManager instance
-        configManager = new ConfigManager(this);
-
-        // Setup the configuration file
-        configManager.setup();
-
-        // Get the FileConfiguration object for the configuration file
-        config = configManager.getConfig();
-
-        // Use the config object to read and write data to the configuration file
-        checkRgInterval = config.getInt("check-rg-interval");
-        checkInterval = config.getInt("check-interval");
-        growDelay = config.getInt("grow-delay");
+        // Load config.yml file and get necessary values
+        saveDefaultConfig();
+        checkRgInterval = getConfig().getInt("check-rg-interval");
+        checkInterval = getConfig().getInt("check-interval");
+        growDelay = getConfig().getInt("grow-delay");
 
         findNewRegions();
         treeRespawner();
@@ -63,7 +47,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         // Save the configuration file
-        configManager.saveConfig();
+        saveConfig();
     }
 
     public void getTreeMineRegions(){

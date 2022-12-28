@@ -21,18 +21,7 @@ public class ConfigManager {
             plugin.getDataFolder().mkdir();
         }
 
-        configFile = new File(plugin.getDataFolder(), "config.yml");
-
-        if (!configFile.exists()) {
-            // Save the default configuration file
-            plugin.saveDefaultConfig();
-            
-            // Load the configuration data from the file
-            config = YamlConfiguration.loadConfiguration(configFile);
-        } else {
-            // The configuration file already exists, so we can just load the data from it
-            config = YamlConfiguration.loadConfiguration(configFile);
-        }
+        plugin.saveDefaultConfig();
     }
 
     public FileConfiguration getConfig() {
