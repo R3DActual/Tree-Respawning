@@ -1,0 +1,5 @@
+# The grow delay (in seconds) at which the plugin delays growing the sapling
+growDelay: 5
+
+# The mine delay (in minutes) at which the plugin delays attempting to reset the mine
+mineInterval: 1

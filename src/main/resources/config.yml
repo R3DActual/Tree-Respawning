@@ -1,8 +1,2 @@
-# The interval (in seconds) at which the plugin checks for new regions
-check-rg-interval: 60
-
-# The interval (in seconds) at which the plugin checks for saplings that need to be placed
-check-interval: 30
-
-# The delay (in seconds) before a placed sapling grows into a tree
-grow-delay: 5
+# The interval (in minutes) at which the plugin checks for new regions
+check-rg-interval: 1
