@@ -1,0 +1,11 @@
+name: TreeRespawner
+version: '${project.version}'
+main: me.r3dactual.treerespawner.Main
+api-version: 1.19
+authors: [ R3D ]
+depend: [WorldEdit, WorldGuard]
+description: TreeRespawner is a plugin targeted for Prison servers. Having a region for players to mine down trees and those trees respawn after a certain time.
+contributors:
+  - John Doe
+  - Jane Smith
+  - Bob Johnson
