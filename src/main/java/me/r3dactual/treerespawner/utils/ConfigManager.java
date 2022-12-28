@@ -24,14 +24,15 @@ public class ConfigManager {
         configFile = new File(plugin.getDataFolder(), "config.yml");
 
         if (!configFile.exists()) {
-            try {
-                configFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // Save the default configuration file
+            plugin.saveDefaultConfig();
+            
+            // Load the configuration data from the file
+            config = YamlConfiguration.loadConfiguration(configFile);
+        } else {
+            // The configuration file already exists, so we can just load the data from it
+            config = YamlConfiguration.loadConfiguration(configFile);
         }
-
-        config = YamlConfiguration.loadConfiguration(configFile);
     }
 
     public FileConfiguration getConfig() {

@@ -52,13 +52,12 @@ public final class Main extends JavaPlugin implements Listener {
         config = configManager.getConfig();
 
         // Use the config object to read and write data to the configuration file
-        checkRgInterval = config.getInt("check-rg-interval") * 20;
-        checkInterval = config.getInt("check-interval") * 20;
-        growDelay = config.getInt("grow-delay") * 20;
+        checkRgInterval = config.getInt("check-rg-interval");
+        checkInterval = config.getInt("check-interval");
+        growDelay = config.getInt("grow-delay");
 
         findNewRegions();
         treeRespawner();
-
     }
 
     @Override
@@ -139,7 +138,7 @@ public final class Main extends JavaPlugin implements Listener {
                                         getLogger().info("Couldn't Grew tree at " + finalX + ", " + finalY + ", " + finalZ);
                                     }
                                 }
-                            }.runTaskLater(this, growDelay);
+                            }.runTaskLater(this, growDelay * 20);
                         }
                     }
                 }
@@ -178,7 +177,7 @@ public final class Main extends JavaPlugin implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(this, 0, checkInterval);
+        }.runTaskTimer(this, 0, checkInterval * 20);
     }
 
     public void findNewRegions(){
@@ -188,6 +187,6 @@ public final class Main extends JavaPlugin implements Listener {
             public void run() {
                 getTreeMineRegions();
             }
-        }.runTaskTimer(this, 0, checkRgInterval); // Run the task every 20 ticks (1 tick = 1/20 seconds), which is equivalent to 1 minute
+        }.runTaskTimer(this, 0, checkRgInterval * 20); // Run the task every 20 ticks (1 tick = 1/20 seconds), which is equivalent to 1 minute
     }
 }
