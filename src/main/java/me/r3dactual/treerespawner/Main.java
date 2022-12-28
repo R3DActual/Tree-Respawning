@@ -5,10 +5,16 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import me.r3dactual.treerespawner.utils.ConfigManager;
 import org.bukkit.*;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 // TODO: Add Config for GROW_DELAY, CHECK_INTERVAL, etc.
 
@@ -24,50 +30,80 @@ import org.bukkit.scheduler.BukkitRunnable;
 //  tree is cut down remove the leaves
 
 public final class Main extends JavaPlugin implements Listener {
+    // Create a new ConfigManager instance
+    ConfigManager configManager;
 
-    // The delay (in ticks) before checking to place saplings
-    private static final int CHECK_INTERVAL = 20 * 30;  // Check every 30 seconds
+    // Get the FileConfiguration object for the configuration file
+    FileConfiguration config;
 
-    // The delay (in ticks) before a placed sapling grows into a tree
-    private static final int GROW_DELAY = 20 * 5;  // 5 seconds
-
-    // The WorldGuard region where trees should respawn
-    private static final String REGION_NAME = "tree-respawn-area";
-
-    public void start() {
-        // Start the tree respawner task
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (World world : Bukkit.getWorlds()) {
-                    // Get the region manager for the world
-                    RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
-                    if (regionManager == null) {
-                        return;
-                    }
-
-                    // Get the region with the name REGION_NAME
-                    ProtectedRegion region = regionManager.getRegion(REGION_NAME);
-                    if (region == null) {
-                        return;
-                    }
-
-                    // Grow a sapling at the random location
-                    growSaplingsInRegion(world, region);
-                }
-            }
-        }.runTaskTimer(this, 0, CHECK_INTERVAL);
-    }
+    int checkRgInterval;
+    int checkInterval;
+    int growDelay;
 
     @Override
     public void onEnable() {
-        start();
+        // Create a new ConfigManager instance
+        configManager = new ConfigManager(this);
+
+        // Setup the configuration file
+        configManager.setup();
+
+        // Get the FileConfiguration object for the configuration file
+        config = configManager.getConfig();
+
+        // Use the config object to read and write data to the configuration file
+        checkRgInterval = config.getInt("check-rg-interval") * 20;
+        checkInterval = config.getInt("check-interval") * 20;
+        growDelay = config.getInt("grow-delay") * 20;
+
+        findNewRegions();
+        treeRespawner();
 
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        // Save the configuration file
+        configManager.saveConfig();
+    }
+
+    public void getTreeMineRegions(){
+        // Get the WorldGuard plugin instance
+        WorldGuard worldGuard = WorldGuard.getInstance();
+
+        // Iterate through all worlds
+        for (World world : Bukkit.getWorlds()) {
+            // Get the regions for the world
+            Map<String, ProtectedRegion> regions = worldGuard.getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world)).getRegions();
+
+            // Create a new folder for the regions
+            File treeMinesFolder = new File(getDataFolder(), "treemines/" + world.getName());
+            treeMinesFolder.mkdirs();
+
+            // Iterate through the regions
+            for (Map.Entry<String, ProtectedRegion> entry : regions.entrySet()) {
+                String regionName = entry.getKey();
+
+                // Check if the region name starts with "tr_" or "treerespawn_"
+                if (regionName.startsWith("tr_") || regionName.startsWith("treerespawn_")) {
+                    // Create a new .yml file for the region
+                    File regionFile = new File(treeMinesFolder, regionName + ".yml");
+
+                    // Check if a file with the same name already exists in the TreeMines folder
+                    if (regionFile.exists()) {
+                        // The file already exists, so we don't need to do anything
+                        return;
+                    }
+
+                    // The file does not exist, so we can create it
+                    try {
+                        regionFile.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
 
     public void growSaplingsInRegion(World world, ProtectedRegion region) {
@@ -103,11 +139,55 @@ public final class Main extends JavaPlugin implements Listener {
                                         getLogger().info("Couldn't Grew tree at " + finalX + ", " + finalY + ", " + finalZ);
                                     }
                                 }
-                            }.runTaskLater(this, GROW_DELAY);
+                            }.runTaskLater(this, growDelay);
                         }
                     }
                 }
             }
         }
+    }
+
+    public void treeRespawner() {
+        // Start the tree respawner task
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (World world : Bukkit.getWorlds()) {
+                    // Get the region manager for the world
+                    RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
+                    if (regionManager == null) {
+                        return;
+                    }
+
+                    Map<String, ProtectedRegion> regions = regionManager.getRegions();
+                    // Iterate through the regions
+                    for (Map.Entry<String, ProtectedRegion> entry : regions.entrySet()) {
+                        String regionName = entry.getKey();
+
+                        // Get the region name with regionName
+                        ProtectedRegion region = regionManager.getRegion(regionName);
+                        if (region == null) {
+                            return;
+                        }
+
+                        // Check if regions contains tr_ or treerespawn_
+                        if (regionName.startsWith("tr_") || regionName.startsWith("treerespawn_")) {
+                            // Grow a sapling at the random location
+                            growSaplingsInRegion(world, region);
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(this, 0, checkInterval);
+    }
+
+    public void findNewRegions(){
+        // Start a new Bukkit runnable that will check for new regions every minute
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                getTreeMineRegions();
+            }
+        }.runTaskTimer(this, 0, checkRgInterval); // Run the task every 20 ticks (1 tick = 1/20 seconds), which is equivalent to 1 minute
     }
 }
